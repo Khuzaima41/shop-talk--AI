@@ -1,0 +1,214 @@
+{
+  "name": "ShopTalk AI \u2013 Call Summary & Lead Capture",
+  "nodes": [
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0ART426YV8",
+          "mode": "list",
+          "cachedResultName": "call-test"
+        },
+        "text": "=*Call_summary*\n{{ $json.body.message.analysis.summary }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false,
+          "mrkdwn": true
+        }
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.4,
+      "position": [
+        -80,
+        256
+      ],
+      "id": "44b7559c-63e0-455a-b6f3-c3f779f3d422",
+      "name": "send call_summary",
+      "webhookId": "bf825555-db54-45f4-99b5-87a099d366c2",
+      "credentials": {
+        "slackApi": {
+          "id": "VZK9RCbZ8m2xTNEh",
+          "name": "My-Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "0e069142-3595-41ae-96e4-a12abd6f8f73",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -528,
+        352
+      ],
+      "id": "1237b6b4-9408-4c3b-9bb8-357bca20968c",
+      "name": "Monitor vapi calls",
+      "webhookId": "0e069142-3595-41ae-96e4-a12abd6f8f73"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1zCCgHlBM0pUEnvtM7WPbdWpyjy_nT4kJraS0p2TequY",
+          "mode": "list",
+          "cachedResultName": "Vapi Leads",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1zCCgHlBM0pUEnvtM7WPbdWpyjy_nT4kJraS0p2TequY/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1zCCgHlBM0pUEnvtM7WPbdWpyjy_nT4kJraS0p2TequY/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "caller-phone": "={{ $json.body.message.call.customer.number }}",
+            "name": "={{ $json.body.message.analysis.structuredData.name }}",
+            "email": "={{ $json.body.message.analysis.structuredData.email }}",
+            "intent": "={{ $json.body.message.analysis.structuredData.intent }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "caller-phone",
+              "displayName": "caller-phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "intent",
+              "displayName": "intent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -80,
+        448
+      ],
+      "id": "1b2dd355-4301-42b4-81a8-1b26efa3ce28",
+      "name": "Add leads into sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "9u4kjD9XhVakYV7F",
+          "name": "Google Sheets (Concaptions) i2i"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "063fb414-b670-48d6-ba44-6a97e6e18fde",
+              "leftValue": "={{ $json.body.message.analysis.summary }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -304,
+        352
+      ],
+      "id": "b86bc72b-841d-4970-9dcf-bee19205f615",
+      "name": "Indentify summary or Leads"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Monitor vapi calls": {
+      "main": [
+        [
+          {
+            "node": "Indentify summary or Leads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Indentify summary or Leads": {
+      "main": [
+        [
+          {
+            "node": "send call_summary",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Add leads into sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "758a08d7-0577-46c9-9039-a34772bd73cc",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "e10b2caeeedbb7486aebdd0a7fd0d0332b1fb8ce1536a7aa9fd243d9087c9301"
+  },
+  "id": "RU9L9PULyM_WNk1hAiQVT",
+  "tags": []
+}
